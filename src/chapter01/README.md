@@ -681,3 +681,181 @@ EOF
 
 </details>
 
+
+
+**11.Create a pod named nginx-pod-limit using image nginx:1.18.0 on port 80 add 200m CPU limit and 700Mi memory limit**
+
+CHECK
+```kubectl get pod nginx-pod-limit -o yaml -n alpha |grep "containerPort: 80" && echo "done"```  
+
+```kubectl get pod nginx-pod-limit -o yaml -n alpha |grep "image: nginx:1.18.0" && echo "done"```  
+
+```kubectl get pod nginx-pod-limit -o yaml -n alpha | grep limits: -A2 | grep "cpu: 200m" && echo "done"```  
+
+```kubectl get pod nginx-pod-limit -o yaml -n alpha | grep limits: -A2 | grep "memory: 700Mi" && echo "done"```  
+
+CHECK
+
+
+<details>
+<summary><b>Answer for Question 11 </b></summary>
+
+
+</details>
+
+
+```bash
+kubectl run nginx-pod-limit -n alpha --image=nginx:1.18.0 --limits="memory=700Mi,cpu=200m" --port=80  -o yaml --dry-run=client >04-pod-nginx-limit.yaml
+
+kubectl apply -f 04-pod-nginx-limit.yaml -n alpha
+```
+
+The whole file
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx-pod-limit
+  name: nginx-pod-limit
+  namespace: alpha
+spec:
+  containers:
+  - image: nginx:1.18.0
+    name: nginx-pod-limit
+    ports:
+    - containerPort: 80
+    resources:
+      limits:
+        cpu: 200m
+        memory: 700Mi
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+EOF
+```
+
+
+
+**12.Create a pod named nginx-pod-request using image nginx:1.18.0 on port 80 add 100m CPU request and 500Mi memory request**
+
+CHECK
+
+```kubectl get pod nginx-pod-request -o yaml -n alpha |grep "containerPort: 80" && echo "done"```  
+
+```kubectl get pod nginx-pod-request -o yaml -n alpha |grep "image: nginx:1.18.0" && echo "done"```  
+
+```kubectl get pod nginx-pod-request -o yaml -n alpha | grep requests: -A2 | grep "cpu: 100m" && echo "done"```  
+
+```kubectl get pod nginx-pod-request -o yaml -n alpha | grep requests: -A2 | grep "memory: 500Mi" && echo "done"```  
+
+CHECK
+
+
+<details>
+<summary><b>Answer for Question 12 </b></summary>
+
+```
+kubectl run nginx-pod-request -n alpha --image=nginx:1.18.0 --requests="memory=500Mi,cpu=100m" --port=80  -o yaml --dry-run=client >04-pod-nginx-request.yaml
+
+kubectl apply -f 04-pod-nginx-request.yaml -n alpha
+```
+
+The whole file
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx-pod-request
+  name: nginx-pod-request
+  namespace: alpha
+spec:
+  containers:
+  - image: nginx:1.18.0
+    name: nginx-pod-request
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        cpu: 100m
+        memory: 500Mi
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+EOF
+```
+</details>
+
+
+
+
+
+**13.Create a pod named nginx-pod-request-limit using image nginx:1.18.0 on port 80 add 100m CPU request and 500Mi memory request and 200m CPU limit and 700Mi memory limit**
+
+CHECK
+
+```kubectl get pod nginx-pod-request-limit -o yaml -n alpha |grep "containerPort: 80" && echo "done"```  
+
+```kubectl get pod nginx-pod-request-limit -n alpha -o yaml |grep "image: nginx:1.18.0" && echo "done"```  
+
+```kubectl get pod nginx-pod-request-limit -o yaml -n alpha | grep limits: -A2 | grep "cpu: 200m" && echo "done"```  
+
+```kubectl get pod nginx-pod-request-limit -o yaml -n alpha | grep limits: -A2 | grep "memory: 700Mi" && echo "done"```  
+
+```kubectl get pod nginx-pod-request-limit -o yaml -n alpha | grep requests: -A2 | grep "cpu: 100m" && echo "done"```  
+
+```kubectl get pod nginx-pod-request-limit -o yaml -n alpha | grep requests: -A2 | grep "memory: 500Mi" && echo "done"```  
+
+CHECK
+
+
+<details>
+<summary><b>Answer for Question 13 </b></summary>
+
+
+```
+kubectl run nginx-pod-request-limit -n alpha --image=nginx:1.18.0 --port=80 \
+  --requests="memory=500Mi,cpu=100m"  --limits="memory=700Mi,cpu=200m" \
+  -o yaml --dry-run=client >04-pod-nginx-request-limit.yaml --port 80
+
+kubectl apply -f 04-pod-nginx-request-limit.yaml -n alpha
+```
+
+The whole file
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx-pod-request-limit
+  name: nginx-pod-request-limit
+  namespace: alpha
+spec:
+  containers:
+  - image: nginx:1.18.0
+    name: nginx-pod-request-limit
+    ports:
+    - containerPort: 80
+    resources:
+      limits:
+        cpu: 200m
+        memory: 700Mi
+      requests:
+        cpu: 100m
+        memory: 500Mi
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+EOF
+```
+</details>
