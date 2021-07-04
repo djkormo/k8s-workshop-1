@@ -1,5 +1,5 @@
 
-## Show list of cluster nodes
+ **Show list of cluster nodes**
 
 ```bash
 kubectl get nodes
@@ -19,10 +19,10 @@ kubectl get all -o wide
 
 Create namespace alpha if missing 
 
-```
-kubectl create ns alpha
-```
+```kubectl create ns alpha```
 
+
+All objects should be created in alpha namespace
 
 **1.Create a pod named web using image nginx:1.11.9-alpine, on port 80 and 443.** 
 
@@ -35,25 +35,21 @@ web    1/1     Running   0          49s
 
 CHECK
 
-```
-kubectl get pod web -n alpha |grep Running
-```
+```kubectl get pod web -n alpha |grep Running```
 
-```
-kubectl get pod web -n alpha -o yaml  |grep 'image: nginx:1.11.9-alpine' && echo "done"
-
-```
+```kubectl get pod web -n alpha -o yaml  |grep 'image: nginx:1.11.9-alpine' && echo "done"```
 CHECK
 
 
 <details>
 <summary><b>Answer for Question 01 </b></summary>
 
-Any folded content here. It requires an empty line just above it.
+
 
 ```bash
 kubectl run web --image=nginx:1.11.9-alpine --port 80  -o yaml --dry-run=client > 01-web-pod.yaml
 ```
+
 edit
 
 ```
@@ -67,7 +63,6 @@ kubectl apply -f 01-web-pod.yaml -n alpha
 
 kubectl expose pod/web --name=webservice -n alpha -o yaml --dry-run=client > 01-webservice-service.yaml
 ```
-
 
 The complete yaml manifest
 
@@ -100,10 +95,9 @@ EOF
 
 
 
-
 **2.Create a service to expose that pod, named as webservice**
 
-`kubectl get pod,svc,ep -n alpha`{{execute}}
+```kubectl get pod,svc,ep -n alpha``` 
 
 <pre>
 
@@ -119,13 +113,11 @@ endpoints/webservice   10.244.1.4:80,10.244.1.4:443   15s
 </pre>
 
 CHECK
-`kubectl get svc webservice -n alpha |grep 80 && kubectl get svc webservice -n alpha |grep 443 &&  echo "done" `{{execute}}
+```kubectl get svc webservice -n alpha |grep 80 && kubectl get svc webservice -n alpha |grep 443 &&  echo "done" ``` 
 CHECK
 
 <details>
 <summary><b>Answer for Question 02 </b></summary>
-
-
 
 
 ```bash
@@ -164,13 +156,14 @@ EOF
 
 </details>
 
+
 **3.Create a pod named postgresql using image postgres:12.4 on port 5432.**
 
 Something bad is going on
 
-`kubectl get pod postgresql -n alpha`{{execute}}
+```kubectl get pod postgresql -n alpha``` 
 
-`kubectl logs postgresql -n alpha`{{execute}}
+```kubectl logs postgresql -n alpha``` 
 
 <pre>
 Error: Database is uninitialized and superuser password is not specified.
@@ -187,19 +180,47 @@ Error: Database is uninitialized and superuser password is not specified.
 
 
 CHECK
-`kubectl get pod postgresql -n alpha && echo "done"`{{execute}}
+```kubectl get pod postgresql -n alpha && echo "done"``` 
 
-`kubectl get pod postgresql -n alpha -o yaml |grep " containerPort: 5432" && echo "done"`{{execute}}
+```kubectl get pod postgresql -n alpha -o yaml |grep " containerPort: 5432" && echo "done"``` 
 
-`kubectl get pod postgresql -n alpha -o yaml  |grep 'image: postgres:12.4' && echo "done"`{{execute}}
+```kubectl get pod postgresql -n alpha -o yaml  |grep 'image: postgres:12.4' && echo "done"``` 
 
 CHECK
 
 <details>
 <summary><b>Answer for Question 03 </b></summary>
 
-Any folded content here. It requires an empty line just above it.
-TODO
+
+```bash
+kubectl run postgresql --image=postgres:12.4 --port 5432  \
+  -o yaml --dry-run=client > 02-postgresql-pod.yaml
+
+kubectl apply -f 02-postgresql-pod.yaml -n alpha
+```
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: postgresql
+  name: postgresql
+  namespace: alpha
+spec:
+  containers:
+  - image: postgres:12.4
+    name: postgresql
+    ports:
+    - containerPort: 5432
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+EOF
+```
 
 </details>
 
@@ -215,9 +236,9 @@ POSTGRES_DB: postgresdb
 POSTGRES_USER: postgresadmin
 POSTGRES_PASSWORD: admin123
 
-`kubectl get pod postgresql-env -n alpha`{{execute}}
+```kubectl get pod postgresql-env -n alpha``` 
 
-`kubectl logs postgresql-env -n alpha`{{execute}}
+```kubectl logs postgresql-env -n alpha``` 
 
 <pre>
 ...
@@ -228,11 +249,11 @@ POSTGRES_PASSWORD: admin123
 
 CHECK
 
-`kubectl get pod postgresql-env -n alpha |grep Running && echo "done"`{{execute}}
+```kubectl get pod postgresql-env -n alpha |grep Running && echo "done"```
 
-`kubectl get pod postgresql-env -n alpha -o yaml |grep "containerPort: 5432"&& echo "done"`{{execute}}
+```kubectl get pod postgresql-env -n alpha -o yaml |grep "containerPort: 5432"&& echo "done"```
 
-`kubectl get pod postgresql-env -n alpha -o yaml  |grep 'image: postgres:12.4'&& echo "done"`{{execute}}
+```kubectl get pod postgresql-env -n alpha -o yaml  |grep 'image: postgres:12.4'&& echo "done"```
 
 CHECK
 
@@ -240,8 +261,43 @@ CHECK
 <details>
 <summary><b>Answer for Question 04 </b></summary>
 
-Any folded content here. It requires an empty line just above it.
-TODO
+
+```bash
+kubectl run postgresql-env --image=postgres:12.4 --port 5432  \
+  --env="POSTGRES_DB=postgresdb" --env="POSTGRES_USER=postgresadmin" --env="POSTGRES_PASSWORD=admin123" \
+  -o yaml --dry-run=client  > 02-postgresql-env-pod.yaml
+
+kubectl apply -f 02-postgresql-env-pod.yaml -n alpha
+```
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: postgresql-env
+  name: postgresql-env
+  namespace: alpha
+spec:
+  containers:
+  - env:
+    - name: POSTGRES_DB
+      value: postgresdb
+    - name: POSTGRES_USER
+      value: postgresadmin
+    - name: POSTGRES_PASSWORD
+      value: admin123
+    image: postgres:12.4
+    name: postgresql-env
+    ports:
+    - containerPort: 5432
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+EOF
+```
 
 </details>
 
@@ -254,13 +310,13 @@ POSTGRES_PASSWORD: admin123
 
 
 CHECK
-`kubectl get cm postgresql-configmap -n alpha && echo "done"`{{execute}}
+```kubectl get cm postgresql-configmap -n alpha && echo "done"``` 
 
-`kubectl get cm postgresql-configmap -n alpha -o yaml | grep "POSTGRES_DB: postgresdb" && echo "done"`{{execute}}
+```kubectl get cm postgresql-configmap -n alpha -o yaml | grep "POSTGRES_DB: postgresdb" && echo "done"``` 
 
-`kubectl get cm postgresql-configmap -n alpha -o yaml | grep "POSTGRES_USER: postgresadmin" && echo "done"`{{execute}}
+```kubectl get cm postgresql-configmap -n alpha -o yaml | grep "POSTGRES_USER: postgresadmin" && echo "done"``` 
 
-`kubectl get cm postgresql-configmap -n alpha -o yaml | grep "POSTGRES_PASSWORD: admin123" && echo "done"`{{execute}}
+```kubectl get cm postgresql-configmap -n alpha -o yaml | grep "POSTGRES_PASSWORD: admin123" && echo "done"``` 
 
 CHECK
 
@@ -268,8 +324,32 @@ CHECK
 <details>
 <summary><b>Answer for Question 04 </b></summary>
 
-Any folded content here. It requires an empty line just above it.
-TODO
+```bash
+kubectl create configmap postgresql-configmap   --from-literal="POSTGRES_DB=postgresdb"  \
+  --from-literal="POSTGRES_USER=postgresadmin" \
+  --from-literal="POSTGRES_PASSWORD=admin123" \
+  -n alpha -o yaml --dry-run=client > 02-postgresql-configmap.yaml
+
+kubectl apply -f 02-postgresql-configmap.yaml -n alpha
+```
+
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+data:
+  POSTGRES_DB: postgresdb
+  POSTGRES_PASSWORD: admin123
+  POSTGRES_USER: postgresadmin
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: postgresql-configmap
+  namespace: alpha
+EOF
+```
+
+
 
 </details>
 
@@ -282,21 +362,64 @@ But instead of environment variables use configmap postgresql-configmap
 Hint!
 use:
 
-`kubectl explain pod.spec.containers.envFrom`{{execute}}
+`kubectl explain pod.spec.containers.envFrom` 
 
 CHECK
 
-`kubectl get pod postgresql-cm -n alpha | grep Running && echo "done"`{{execute}}
+```kubectl get pod postgresql-cm -n alpha | grep Running && echo "done"``` 
 
-`kubectl get pod postgresql-cm -n alpha -o yaml |grep configMapRef -A1 | grep postgresql-cm && echo "done"`{{execute}}
+```kubectl get pod postgresql-cm -n alpha -o yaml |grep configMapRef -A1 | grep postgresql-cm && echo "done"``` 
 
 CHECK
 
 <details>
 <summary><b>Answer for Question 06 </b></summary>
 
-Any folded content here. It requires an empty line just above it.
-TODO
+```bash
+cp 02-postgresql-env-pod.yaml 02-postgresql-cm-pod.yaml
+
+vim 02-postgresql-cm-pod.yaml
+```
+
+change name to postgresql-cm
+add  
+
+```yaml
+envFrom:
+  - configMapRef:
+    name: postgresql-configmap
+```
+
+```bash
+kubectl apply -f postgresql-cm-pod.yaml -n alpha
+```
+
+The whole file
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: postgresql-cm
+  name: postgresql-cm
+  namespace: alpha
+spec:
+  containers:
+  - envFrom:
+    - configMapRef:
+        name: postgresql-configmap
+    image: postgres:12.4
+    name: postgresql-cm
+    ports:
+    - containerPort: 5432
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+EOF  
+```
+
 
 </details>
 
@@ -309,11 +432,11 @@ POSTGRES_USER: postgresadmin
 
 CHECK
 
-`kubectl get cm postgresql-configmap-nopass -n alpha && echo "done"`{{execute}}
+```kubectl get cm postgresql-configmap-nopass -n alpha && echo "done"```
 
-`kubectl get cm postgresql-configmap-nopass -n alpha -o yaml | grep "POSTGRES_DB: postgresdb" && echo "done"`{{execute}}
+```kubectl get cm postgresql-configmap-nopass -n alpha -o yaml | grep "POSTGRES_DB: postgresdb" && echo "done"```
 
-`kubectl get cm postgresql-configmap-nopass -n alpha -o yaml | grep "POSTGRES_USER: postgresadmin" && echo "done"`{{execute}}
+```kubectl get cm postgresql-configmap-nopass -n alpha -o yaml | grep "POSTGRES_USER: postgresadmin" && echo "done"```
 
 CHECK
 
@@ -322,8 +445,43 @@ CHECK
 <details>
 <summary><b>Answer for Question 07 </b></summary>
 
-Any folded content here. It requires an empty line just above it.
-TODO
+```bash
+kubectl create configmap postgresql-configmap-nopass \
+  --from-literal="POSTGRES_DB=postgresdb" \
+  --from-literal=POSTGRES_USER=postgresadmin \
+  -o yaml --dry-run=client > 02-postgresql-configmap-nopass.yaml
+
+kubectl apply -f 02-postgresql-configmap-nopass.yaml -n alpha
+```
+
+or  
+
+```bash
+cp 02-postgresql-configmap.yaml 02-postgresql-configmap-nopass.yaml
+vim 02-postgresql-configmap-nopass.yaml
+```
+
+change name to postgresql-configmap-nopass
+and remove POSTGRES_PASSWORD
+
+```
+kubectl apply -f 02-postgresql-configmap-nopass.yaml -n alpha
+```
+
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+data:
+  POSTGRES_DB: postgresdb
+  POSTGRES_USER: postgresadmin
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: postgresql-configmap-nopass
+  namespace: alpha
+EOF
+```
 
 </details>
 
@@ -335,9 +493,9 @@ POSTGRES_PASSWORD: admin123
 
 CHECK
 
-`kubectl get secret postgresql-secret -n alpha && echo "done"`{{execute}}
+```kubectl get secret postgresql-secret -n alpha && echo "done"``` 
 
-`kubectl get secret postgresql-secret -n alpha -o yaml | grep POSTGRES_PASSWORD: && echo "done"`{{execute}}
+```kubectl get secret postgresql-secret -n alpha -o yaml | grep POSTGRES_PASSWORD: && echo "done"``` 
 
 CHECK
 
@@ -345,8 +503,27 @@ CHECK
 <details>
 <summary><b>Answer for Question 08 </b></summary>
 
-Any folded content here. It requires an empty line just above it.
-TODO
+
+```bash
+kubectl create secret generic postgresql-secret \
+--from-literal="POSTGRES_PASSWORD=admin123"  \
+-o yaml  --dry-run=client  > 02-postgresql-secret.yaml
+
+kubectl apply -f 02-postgresql-secret.yaml -n alpha
+```
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+data:
+  POSTGRES_PASSWORD: YWRtaW4xMjM=
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: postgresql-secret
+  namespace: alpha
+EOF
+```
 
 </details>
 
@@ -361,11 +538,11 @@ secret postgresql-secret
 
 CHECK
 
-`kubectl get pod postgresql-cm-secret -n alpha | grep Running && echo "done"`{{execute}}
+```kubectl get pod postgresql-cm-secret -n alpha | grep Running && echo "done"``` 
 
-`kubectl get pod postgresql-cm-secret -n alpha -o yaml |grep configMapRef -A1 | grep postgresql-configmap-nopass && echo "done"`{{execute}}
+```kubectl get pod postgresql-cm-secret -n alpha -o yaml |grep configMapRef -A1 | grep postgresql-configmap-nopass && echo "done"``` 
 
-`kubectl get pod postgresql-cm-secret -n alpha -o yaml |grep secretRef: -A1| grep postgresql-secret && echo "done"`{{execute}}
+```kubectl get pod postgresql-cm-secret -n alpha -o yaml |grep secretRef: -A1| grep postgresql-secret && echo "done"``` 
 
 CHECK
 
@@ -374,7 +551,59 @@ CHECK
 <summary><b>Answer for Question 09 </b></summary>
 
 Any folded content here. It requires an empty line just above it.
-TODO
+
+
+```bash
+cp  02-postgresql-cm-pod.yaml 02-postgresql-cm-secret.yaml
+
+vim 02-postgresql-cm-secret.yaml
+```
+
+change name to postgresql-cm-secret
+change configmap name
+add secret reference
+
+```yaml
+envFrom:
+- configMapRef:
+    name: postgresql-configmap-nopass
+- secretRef:
+    name: postgresql-secret
+```
+
+
+```bash
+kubectl apply -f  02-postgresql-cm-secret.yaml  -n alpha
+```
+
+The whole file
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: postgresql-cm-secret
+  name: postgresql-cm-secret
+  namespace: alpha
+spec:
+  containers:
+  - envFrom:
+    - configMapRef:
+        name: postgresql-configmap-nopass
+    - secretRef:
+        name: postgresql-secret
+    image: postgres:12.4
+    name: postgresql-cm-secret
+    ports:
+    - containerPort: 5432
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+EOF  
+```
+
 
 </details>
 
@@ -383,11 +612,11 @@ TODO
 
 CHECK
 
-`kubectl get svc postgresql-webservice -n alpha |grep 5432 && echo "done" `{{execute}}
+```kubectl get svc postgresql-webservice -n alpha |grep 5432 && echo "done" ``` 
 
 CHECK
 
-`kubectl get pod,cm,secret,svc,ep -n alpha`{{execute}}
+```kubectl get pod,cm,secret,svc,ep -n alpha``` 
 <pre>
 
 NAME                       READY   STATUS             RESTARTS   AGE
@@ -418,8 +647,37 @@ endpoints/webservice             10.244.1.3:80,10.244.1.3:443                   
 <details>
 <summary><b>Answer for Question 10 </b></summary>
 
-Any folded content here. It requires an empty line just above it.
-TODO
+
+```bash
+kubectl expose pod/postgresql-cm-secret --name=postgresql-webservice -n alpha -o yaml --dry-run=client > 02-postgresql-webservice.yaml
+
+kubectl apply -f 02-postgresql-webservice.yaml -n alpha
+```
+
+The whole file
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    run: postgresql-cm-secret
+  name: postgresql-webservice
+  namespace: alpha 
+spec:
+  ports:
+  - port: 5432
+    protocol: TCP
+    targetPort: 5432
+  selector:
+    run: postgresql-cm-secret
+status:
+  loadBalancer: {}
+EOF  
+```
+
 
 </details>
 
