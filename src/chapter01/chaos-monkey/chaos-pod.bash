@@ -6,7 +6,7 @@
 : ${EXCLUDEDAPPS:=k8s-chaos-monkey}
 # endless loop 
 while true; do
-  PODNAME=$(kubectl   get pods --field-selector=status.phase=Running -l app!=$EXCLUDEDAPPS --namespace $NAMESPACE -o 'jsonpath={.items[*].metadata.name}' |tr " " "\n" |shuf |head -n 1)
+  PODNAME=$(kubectl get pods --field-selector=status.phase=Running -l app!=$EXCLUDEDAPPS --namespace $NAMESPACE -o 'jsonpath={.items[*].metadata.name}' |tr " " "\n" |shuf |head -n 1)
   echo "NAMESPACE :$NAMESPACE"
   echo "PODNAME :$PODNAME"
   NOW=$(date)
